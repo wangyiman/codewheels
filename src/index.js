@@ -1,26 +1,31 @@
-import ReactDOM from './reactdom';
-import React from './react';
+import React from './react'
+import ReactDOM from './reactdom'
 
-//test1
-const element = <div>Hello<span>World!</span></div>;
+class Counter extends React.Component {
+    constructor( props ) {
+        super( props );
+        this.state = {
+            num: 1
+        }
+    }
 
-console.log(element);
+    onClick() {
+        this.setState( { num: this.state.num + 1 } );
+    }
 
-//test2
-function addOne() {
-    alert('hhhh')
+    render() {
+        return (
+            <div>
+                <h1>count: { this.state.num }</h1>
+                <button onClick={ () => this.onClick()}>add</button>
+            </div>
+        );
+    }
 }
-function tick() {
-    const element = (
-      <div>
-        <h1>Hello, world!</h1>
-        <h2>It is {new Date().toLocaleTimeString()}.</h2>
-      </div>
-    );
-    // highlight-next-line
-    ReactDOM.render(element, document.getElementById('container'));
-}
-  
-setInterval(tick, 1000);
+
+ReactDOM.render(
+    <Counter />,
+    document.getElementById('container')
+);
 
 

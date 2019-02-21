@@ -1,3 +1,5 @@
+import { Component } from './react';
+
 function setAttribute(dom, attrName, attrValue) {
     if(attrName === 'className') attrName = 'class';
 
@@ -21,11 +23,69 @@ function setAttribute(dom, attrName, attrValue) {
         }
     }
 }
+function createComponent(nodeType, nodeProps) {
+    let inst;
+    if(nodeType.prototype && nodeType.prototype.render) {
+      inst = new nodeType(nodeProps);
+    } else {
+      inst = new Component(nodeProps);
+      inst.constructor = nodeType;
+      inst.render = function() {
+        return this.constructor(nodeProps);
+      }
+    }
 
-function render(vnode, container) {
-    if(typeof vnode === 'string' || typeof vnode === 'number') {
+    return inst;
+}
+
+function setComponentProps(component, nodeProps) {
+    if(!component.base) {
+      if(component.componentWillMount) component.componentWillMount();
+    } else if(component.componentWillReceiveProps) {
+      component.componentWillReceiveProps(nodeProps); 
+    }
+
+    component.props = nodeProps;
+    renderComponent(component);
+}
+
+export function renderComponent(component) {
+    let base;
+    const renderer = component.render();
+    if(component.base && component.componentWillUpdate) {
+      component.componentWillUpdate();
+    }
+    base = _render(renderer);
+
+    if(component.base) {
+      if(component.componentDidUpdate) component.componentDidUpdate();
+    } else if(component.componentDidMount) {
+      component.componentDidMount();
+    }
+
+    if(component.base && component.base.parentNode) {
+      component.base.parentNode.replaceChild(base, component.base);
+    }
+
+    component.base = base;
+
+    base._component = component;
+}
+
+function _render(vnode) {
+    if ( vnode === undefined || vnode === null || typeof vnode === 'boolean' ) vnode = '';
+  
+    if ( typeof vnode === 'number' ) vnode = String( vnode );
+
+    if(typeof vnode === 'string') {
         const textNode = document.createTextNode(vnode);
-        return container.appendChild(textNode);
+        return textNode;
+    }
+
+    if(typeof vnode.tag === 'function') {
+      const component = createComponent(vnode.tag, vnode.attrs);
+      setComponentProps(component, vnode.attrs);
+      return component.base;
     }
 
     const dom = document.createElement(vnode.tag);
@@ -40,12 +100,11 @@ function render(vnode, container) {
     if(vnode.children) {
         let children = vnode.children;
         children.forEach((child) => {
-            render(child, dom);
+            ReactDOM.render(child, dom);
         });
-
     }
 
-    container.appendChild(dom);
+    return dom;
 }
 
 const ReactDOM = {
@@ -53,8 +112,8 @@ const ReactDOM = {
         /*
         这句话很重要，如果没有的话，会在container里一直放内容，直到放完
         */
-        container.innerHTML = '';
-        return render(vnode, container);
+        //container.innerHTML = '';
+        return container.appendChild(_render(vnode));
     }
 }
 
