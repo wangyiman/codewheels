@@ -1,4 +1,4 @@
-React小轮子模拟
+React轮子模拟
 ====
 [参考链接](https://github.com/hujiulong/blog/issues/4)
 
