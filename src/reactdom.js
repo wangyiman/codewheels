@@ -1,4 +1,5 @@
 import { Component } from './react';
+import { diff } from './diff';
 
 function setAttribute(dom, attrName, attrValue) {
     if(attrName === 'className') attrName = 'class';
@@ -55,7 +56,7 @@ export function renderComponent(component) {
     if(component.base && component.componentWillUpdate) {
       component.componentWillUpdate();
     }
-    base = _render(renderer);
+    base = diff(component.base, renderer);
 
     if(component.base) {
       if(component.componentDidUpdate) component.componentDidUpdate();
@@ -63,9 +64,9 @@ export function renderComponent(component) {
       component.componentDidMount();
     }
 
-    if(component.base && component.base.parentNode) {
-      component.base.parentNode.replaceChild(base, component.base);
-    }
+    // if(component.base && component.base.parentNode) {
+    //   component.base.parentNode.replaceChild(base, component.base);
+    // }
 
     component.base = base;
 
@@ -107,6 +108,20 @@ function _render(vnode) {
     return dom;
 }
 
+function unmountComponent(component) {
+    if(component.willUnmount) {
+        component.componentWillUnmount();
+    }
+    removeNode(component);
+
+}
+
+function removeNode(dom) {
+    if(dom && dom.parentNode) {
+        dom.parentNode.removeChild(dom);
+    }
+}
+
 const ReactDOM = {
     render: (vnode, container) => {
         /*
@@ -114,7 +129,12 @@ const ReactDOM = {
         */
         //container.innerHTML = '';
         return container.appendChild(_render(vnode));
-    }
+    },
+    unmountComponent,
+    removeNode,
+    setComponentProps,
+    createComponent,
+    setAttribute
 }
 
 export default ReactDOM;
